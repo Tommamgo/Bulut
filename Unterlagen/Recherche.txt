@@ -1,6 +1,8 @@
 
 Schrittmotro und dessen Treiber
 http://fabmo.de/news/kleiner-schrittmotortreibertest-laute-und-leise-motoren-eine-oddysee/
+Halterung
+https://eckstein-shop.de/Pololu-Stamped-Aluminum-L-Bracket-for-NEMA-14-Stepper-Motors
 
 
 
