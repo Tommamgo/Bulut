@@ -1,31 +1,46 @@
-/*Example sketch to control a stepper motor with A4988 stepper motor driver and Arduino without a library. More info: https://www.makerguides.com */
-// Define stepper motor connections and steps per revolution:
-#define dirPin 2
-#define stepPin 3
-const uint8_t button = 5;
-#define stepsPerRevolution 2000
-void setup() {
-  Serial.begin(9600);
-  // Declare pins as output:
-  pinMode(stepPin, OUTPUT);
-  pinMode(dirPin, OUTPUT);
-  pinMode(button, INPUT);
-}
-void loop() {
-  if (button == HIGH){
-    Serial.println("Hallo ich bin gedrpck ");
-  }
-  stepper_turn();
-  delay(1000);
-}
+volatile unsigned int temp, counter = 0; //This variable will increase or decrease depending on the rotation of encoder
 
-void stepper_turn(){
-    //Spin the stepper motor 5 revolutions fast:
-  for (int i = 0; i < 5 * stepsPerRevolution; i++) {
-    // These four lines result in 1 step:
-    digitalWrite(stepPin, HIGH);
-    delayMicroseconds(500);
-    digitalWrite(stepPin, LOW);
-    delayMicroseconds(500); // 500
+int p4 = 5; 
+int p5 = 4;
+    
+void setup() {
+  Serial.begin (9600);
+  Serial.print("Hallo");
+  pinMode(p4, INPUT_PULLUP); // internal pullup input pin 2 
+  
+  pinMode(p5, INPUT_PULLUP); // internal pullup input pin 3
+//Setting up interrupt
+  //A rising pulse from encodenren activated ai0(). AttachInterrupt 0 is DigitalPin nr 2 on moust Arduino.
+  attachInterrupt(p4, ai0, RISING);
+   
+  //B rising pulse from encodenren activated ai1(). AttachInterrupt 1 is DigitalPin nr 3 on moust Arduino.
+  attachInterrupt(p5, ai1, RISING);
   }
-}
+   
+  void loop() {
+  // Send the value of counter
+  if( counter != temp ){
+  Serial.println (counter);
+  temp = counter;
+  }
+  }
+   
+  void ai0() {
+  // ai0 is activated if DigitalPin nr 2 is going from LOW to HIGH
+  // Check pin 3 to determine the direction
+  if(digitalRead(p5)==LOW) {
+  counter++;
+  }else{
+  counter--;
+  }
+  }
+   
+  void ai1() {
+  // ai0 is activated if DigitalPin nr 3 is going from LOW to HIGH
+  // Check with pin 2 to determine the direction
+  if(digitalRead(p4)==LOW) {
+  counter--;
+  }else{
+  counter++;
+  }
+  }
