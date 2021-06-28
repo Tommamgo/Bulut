@@ -29,6 +29,8 @@ float getfloatCredit(){
 
 
 
+
+
 void setup() {
   Serial.begin(115200); 
   Serial.println("Hallo ich bin am Leben");
@@ -36,7 +38,7 @@ void setup() {
   //Display-------------------------------------------------------------------------------------------------
   display.init();
   display.setFont(ArialMT_Plain_24);
-  display.drawString(80, 32, "0.50");
+  display.drawString(80, 32, "0.00");
   display.display();
 
   //--------------------------------------------------------------------------------------------------------
@@ -59,9 +61,9 @@ void setup() {
                     Task2code,   /* Task function. */
                     "Task2",     /* name of task. */
                     10000,       /* Stack size of task */
-                    NULL,        /* parameter of the task */
+                    (void*)&credit_conut50,        /* parameter of the task */
                     1,           /* priority of the task */
-                    &Task2,      /* Task handle to keep track of created task */
+                    NULL,      /* Task handle to keep track of created task */
                     1);          /* pin task to core 1 */
     delay(500); 
 
@@ -88,16 +90,19 @@ void Task1code( void * pvParameters ){
 }
 
 //Task2code: 
-void Task2code( void * pvParameters ){
+void Task2code(void * coin_count ){
   Serial.print("Task2 running on core ");
   Serial.println(xPortGetCoreID());
   int credit_state = 0;
   for(;;){
-//    if(credit_state =! credit_conut50){
-//      display.drawString(80, 32, String(getfloatCredit(), 2));
-//      display.display(); 
-//      credit_state = credit_conut50; 
-//    }
+    if(credit_state != *((int*)coin_count)){
+      display.clear();
+      delay(10);
+      display.drawString(80, 32, String(getfloatCredit(), 2));
+      display.display(); 
+      credit_state = *((int*)coin_count); 
+    }
+   //Serial.println(*((int*)coin_count));
     delay(1000);
 
   }
