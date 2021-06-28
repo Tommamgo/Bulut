@@ -1,22 +1,32 @@
 
+
+
 // Prozesse
 TaskHandle_t Task1;
 TaskHandle_t Task2;
 
 // Muenzpruefer
 #define Muenzpruefer_Pin 27
+volatile int credit_conut50 = 0; 
 
 
 // Interrupt function to detect a new Coin
 // Need to be over the SetUp function for init
 void IRAM_ATTR coinINPUT(){
-  Serial.println("We got an new Coin");
+  //Serial.print("We got an new Coin");
+  credit_conut50++;
+  //Serial.println("Credit balance: " + String(credit, 2));
 }
 
 
 void setup() {
   Serial.begin(115200); 
   Serial.println("Hallo ich bin am Leben");
+
+  //Display-------------------------------------------------------------------------------------------------
+
+  //--------------------------------------------------------------------------------------------------------
+  
 
   // Multiprozessing-----------------------------------------------------------------------------------------
   //create a task that will be executed in the Task1code() function, with priority 1 and executed on core 0
@@ -44,8 +54,8 @@ void setup() {
     //-------------------------------------------------------------------------------------------------------
 
     // Muenzpruefer--------------------------------------------------------------------------------------------
-    //pinMode(Muenzpruefer_Pin, INPUT); // init the Pin
-    attachInterrupt(digitalPinToInterrupt(Muenzpruefer_Pin), coinINPUT, RISING); // fot interrupt_Mode
+    attachInterrupt(digitalPinToInterrupt(Muenzpruefer_Pin), &coinINPUT, RISING); // fot interrupt_Mode
+    
 
    
 }
@@ -57,6 +67,7 @@ void Task1code( void * pvParameters ){
   Serial.println(xPortGetCoreID());
 
   for(;;){
+    Serial.println(String(credit_conut50));
   delay(1000);
   } 
 }
