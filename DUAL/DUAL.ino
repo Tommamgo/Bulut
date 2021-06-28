@@ -17,12 +17,18 @@ volatile int credit_conut50 = 0;
 const int freq = 30000;
 const int pwmChannel = 0;
 const int resolution = 8;
-int dutyCycle = 200;
+int dutyCycle = 0;
 
 // Motor
 #define motor1Pin1 33
 #define motor1Pin2 26
 #define enable1Pin 14
+
+// Button 
+#define button 16
+boolean turn_start = false;
+boolean turn_stop = true;  
+
 
 
 // Interrupt function to detect a new Coin
@@ -31,6 +37,28 @@ void IRAM_ATTR coinINPUT(){
   //Serial.print("We got an new Coin");
   credit_conut50++;
   //Serial.println("Credit balance: " + String(credit, 2));
+}
+
+void IRAM_ATTR button_press(){
+  if(turn_start){
+    turn_start = false;
+  }else{
+    turn_start = true; 
+  }
+  if(turn_stop){
+    turn_stop = false;
+  }else{
+    turn_stop = true;
+  }
+}
+void strat_stop(){
+  if(digitalRead(button)){
+    turn_start = false; 
+    turn_stop = true;
+  }else{
+    turn_start = true; 
+    turn_stop = false;
+  }
 }
 
 float getfloatCredit(){
@@ -44,6 +72,11 @@ float getfloatCredit(){
 void setup() {
   Serial.begin(115200); 
   Serial.println("Hallo ich bin am Leben");
+
+  // Button-------------------------------------------------------------------------------------------------
+  pinMode(button, INPUT_PULLUP);
+  //attachInterrupt(digitalPinToInterrupt(button), button_press, LOW); // fot interrupt_Mode
+  //--------------------------------------------------------------------------------------------------------
 
   //Display-------------------------------------------------------------------------------------------------
   display.init();
@@ -114,20 +147,40 @@ void Task1code( void * pvParameters ){
   Serial.println(xPortGetCoreID());
 
   for(;;){
-    Serial.println(String(credit_conut50));
-    
-    // Move DC motor forward with increasing speed
-    digitalWrite(motor1Pin1, HIGH);
-    digitalWrite(motor1Pin2, LOW);
-    while (dutyCycle <= 255){
-    ledcWrite(pwmChannel, dutyCycle);   
-    Serial.print("Forward with duty cycle: ");
-    Serial.println(dutyCycle);
-    dutyCycle = dutyCycle + 5;
-    delay(500);
-  }
-  dutyCycle = 0;
-  delay(1000);
+    strat_stop();
+    if (turn_start && credit_conut50 > 0 ){
+      credit_conut50--;
+      // Move DC motor forward with increasing speed
+      digitalWrite(motor1Pin1, HIGH);
+      digitalWrite(motor1Pin2, LOW);
+      Serial.println(turn_start);
+      Serial.println(turn_stop);
+      while (dutyCycle <= 255 && turn_start == true && turn_stop == false){
+        ledcWrite(pwmChannel, dutyCycle);   
+        Serial.print("Forward with duty cycle: ");
+        Serial.println(dutyCycle);
+        if(dutyCycle < 255){
+          dutyCycle = dutyCycle + 5;
+        }else{
+          strat_stop();
+        }
+        delay(50);
+    }
+    delay(1000);
+    while(dutyCycle > 0 && turn_start == false && turn_stop == true){
+       ledcWrite(pwmChannel, dutyCycle);
+       Serial.print("Forward with duty cycle: ");
+       Serial.println(dutyCycle);
+       dutyCycle-=5;
+       delay(75);
+    }
+     Serial.println("Motor stopped");
+     digitalWrite(motor1Pin1, LOW);
+     digitalWrite(motor1Pin2, LOW);
+    dutyCycle = 0;
+    delay(100);
+    }
+    delay(100);
   } 
 }
 
@@ -145,7 +198,7 @@ void Task2code(void * coin_count ){
       credit_state = *((int*)coin_count); 
     }
    //Serial.println(*((int*)coin_count));
-    delay(1000);
+    delay(10);
 
   }
 }
