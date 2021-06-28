@@ -1,2 +1,4 @@
 GPIO 27 -> DataPin Münzprüfer 
 Ground	-> 12V Ground !!!!! Wichtig sonst erkennt der 
+GPIO 22 -> SCL Display
+GPIO 21 -> SDY Display 
