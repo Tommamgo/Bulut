@@ -5,3 +5,4 @@ GPIO 21 -> SDA Display
 GPOI 14 -> L298N FNA
 GPOI 33 -> L298N IN2
 GPOI 26 -> L298N IN1
+GPOI 16 -> Button to 3.3v
