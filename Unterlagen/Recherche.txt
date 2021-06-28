@@ -15,6 +15,8 @@ Münzprüfer
 https://www.instructables.com/Make-Money-with-Arduino/
 Interrupt 
 https://randomnerdtutorials.com/esp32-pir-motion-sensor-interrupts-timers/
+https://techtutorialsx.com/2017/10/07/esp32-arduino-timer-interrupts/
+
 The third argument is the mode. There are 5 different modes:
 
 LOW: to trigger the interrupt whenever the pin is LOW;
@@ -22,3 +24,4 @@ HIGH: to trigger the interrupt whenever the pin is HIGH;
 CHANGE: to trigger the interrupt whenever the pin changes value – for example from HIGH to LOW or LOW to HIGH;
 FALLING: for when the pin goes from HIGH to LOW;
 RISING: to trigger when the pin goes from LOW to HIGH.
+
