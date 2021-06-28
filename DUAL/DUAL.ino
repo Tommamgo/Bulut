@@ -1,5 +1,10 @@
 
+#include <Wire.h>
+#include "SSD1306.h" 
 
+
+// Display
+SSD1306  display(0x3c, 21, 22);
 
 // Prozesse
 TaskHandle_t Task1;
@@ -18,12 +23,21 @@ void IRAM_ATTR coinINPUT(){
   //Serial.println("Credit balance: " + String(credit, 2));
 }
 
+float getfloatCredit(){
+  return credit_conut50 * 0.50;
+}
+
+
 
 void setup() {
   Serial.begin(115200); 
   Serial.println("Hallo ich bin am Leben");
 
   //Display-------------------------------------------------------------------------------------------------
+  display.init();
+  display.setFont(ArialMT_Plain_24);
+  display.drawString(80, 32, "0.50");
+  display.display();
 
   //--------------------------------------------------------------------------------------------------------
   
@@ -54,11 +68,12 @@ void setup() {
     //-------------------------------------------------------------------------------------------------------
 
     // Muenzpruefer--------------------------------------------------------------------------------------------
-    attachInterrupt(digitalPinToInterrupt(Muenzpruefer_Pin), &coinINPUT, RISING); // fot interrupt_Mode
+    attachInterrupt(digitalPinToInterrupt(Muenzpruefer_Pin), coinINPUT, RISING); // fot interrupt_Mode
     
 
    
 }
+
 
 
 //Task1code: blinks an LED every 1000 ms
@@ -72,12 +87,17 @@ void Task1code( void * pvParameters ){
   } 
 }
 
-//Task2code: blinks an LED every 700 ms
+//Task2code: 
 void Task2code( void * pvParameters ){
   Serial.print("Task2 running on core ");
   Serial.println(xPortGetCoreID());
-
+  int credit_state = 0;
   for(;;){
+//    if(credit_state =! credit_conut50){
+//      display.drawString(80, 32, String(getfloatCredit(), 2));
+//      display.display(); 
+//      credit_state = credit_conut50; 
+//    }
     delay(1000);
 
   }
