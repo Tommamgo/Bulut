@@ -13,6 +13,16 @@ TaskHandle_t Task2;
 // Muenzpruefer
 #define Muenzpruefer_Pin 27
 volatile int credit_conut50 = 0; 
+// Setting PWM properties
+const int freq = 30000;
+const int pwmChannel = 0;
+const int resolution = 8;
+int dutyCycle = 200;
+
+// Motor
+#define motor1Pin1 33
+#define motor1Pin2 26
+#define enable1Pin 14
 
 
 // Interrupt function to detect a new Coin
@@ -40,8 +50,21 @@ void setup() {
   display.setFont(ArialMT_Plain_24);
   display.drawString(80, 32, "0.00");
   display.display();
+  delay(100);
 
   //--------------------------------------------------------------------------------------------------------
+  // Motor--------------------------------------------------------------------------------------------------
+  // sets the pins as outputs:
+  pinMode(motor1Pin1, OUTPUT);
+  pinMode(motor1Pin2, OUTPUT);
+  pinMode(enable1Pin, OUTPUT);
+
+  // configure LED PWM functionalitites
+  ledcSetup(pwmChannel, freq, resolution);
+  
+  // attach the channel to the GPIO to be controlled
+  ledcAttachPin(enable1Pin, pwmChannel);
+  //---------------------------------------------------------------------------------------------------------
   
 
   // Multiprozessing-----------------------------------------------------------------------------------------
@@ -76,6 +99,13 @@ void setup() {
    
 }
 
+void stop_motor(){
+  Serial.println("Motor stopped");
+  digitalWrite(motor1Pin1, LOW);
+  digitalWrite(motor1Pin2, LOW);
+  delay(1000);
+}
+
 
 
 //Task1code: blinks an LED every 1000 ms
@@ -85,6 +115,18 @@ void Task1code( void * pvParameters ){
 
   for(;;){
     Serial.println(String(credit_conut50));
+    
+    // Move DC motor forward with increasing speed
+    digitalWrite(motor1Pin1, HIGH);
+    digitalWrite(motor1Pin2, LOW);
+    while (dutyCycle <= 255){
+    ledcWrite(pwmChannel, dutyCycle);   
+    Serial.print("Forward with duty cycle: ");
+    Serial.println(dutyCycle);
+    dutyCycle = dutyCycle + 5;
+    delay(500);
+  }
+  dutyCycle = 0;
   delay(1000);
   } 
 }
