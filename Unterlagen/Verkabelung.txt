@@ -1,1 +1,2 @@
-
+GPIO 27 -> DataPin Münzprüfer 
+Ground	-> 12V Ground !!!!! Wichtig sonst erkennt der 
