@@ -1,6 +1,11 @@
 (Linus)	A4988 Treiber		 6.39€
 (Linus) 4401 Stepper Motor	22.60€
-(Linus) L298N Motortreiber 4,74€
-(Linus) EndcoderMotor Dc  16,55€
-(Linus) Motor mit Drehgedriebe 18,49€
+(Linus) L298N Motortreiber	 4,74€
+(Linus) EndcoderMotor Dc  	16,55€
+(Linus) Motor mit Drehgedriebe 	18,49€
+(Linus) Kuplung			11,08€
+(Linus) Kuplung 		11,08€
+(Linus) Display			10,28€
+(Linus) Dislapy			 4,99€
+(Linus) Display extra kleien 	 4,79€
 
