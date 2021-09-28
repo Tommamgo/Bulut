@@ -13,6 +13,8 @@ TaskHandle_t Task2;
 // Muenzpruefer
 #define Muenzpruefer_Pin 27
 volatile int credit_conut50 = 0; 
+
+
 // Setting PWM properties
 const int freq = 30000;
 const int pwmChannel = 0;
@@ -20,12 +22,10 @@ const int resolution = 8;
 int dutyCycle = 0;
 
 // Motor
-#define motor1Pin1 33
-#define motor1Pin2 26
-#define enable1Pin 14
+#define motor_control 26
 
 // Button 
-#define button 16
+#define button 10
 boolean turn_start = false;
 boolean turn_stop = true;  
 
@@ -33,24 +33,24 @@ boolean turn_stop = true;
 
 // Interrupt function to detect a new Coin
 // Need to be over the SetUp function for init
-void IRAM_ATTR coinINPUT(){
-  //Serial.print("We got an new Coin");
-  credit_conut50++;
-  //Serial.println("Credit balance: " + String(credit, 2));
-}
+//void IRAM_ATTR coinINPUT(){
+//  //Serial.print("We got an new Coin");
+//  credit_conut50++;
+//  //Serial.println("Credit balance: " + String(credit, 2));
+//}
 
-void IRAM_ATTR button_press(){
-  if(turn_start){
-    turn_start = false;
-  }else{
-    turn_start = true; 
-  }
-  if(turn_stop){
-    turn_stop = false;
-  }else{
-    turn_stop = true;
-  }
-}
+//void IRAM_ATTR button_press(){
+//  if(turn_start){
+//    turn_start = false;
+//  }else{
+//    turn_start = true; 
+//  }
+//  if(turn_stop){
+//    turn_stop = false;
+//  }else{
+//    turn_stop = true;
+//  }
+//}
 void strat_stop(){
   if(digitalRead(button)){
     turn_start = false; 
@@ -78,25 +78,19 @@ void setup() {
   //attachInterrupt(digitalPinToInterrupt(button), button_press, LOW); // fot interrupt_Mode
   //--------------------------------------------------------------------------------------------------------
 
-  //Display-------------------------------------------------------------------------------------------------
-  display.init();
-  display.setFont(ArialMT_Plain_24);
-  display.drawString(80, 32, "0.00");
-  display.display();
-  delay(100);
+//  //Display-------------------------------------------------------------------------------------------------
+//  display.init();
+//  display.setFont(ArialMT_Plain_24);
+//  display.drawString(80, 32, "0.00");
+//  display.display();
+//  delay(100);
 
   //--------------------------------------------------------------------------------------------------------
   // Motor--------------------------------------------------------------------------------------------------
   // sets the pins as outputs:
-  pinMode(motor1Pin1, OUTPUT);
-  pinMode(motor1Pin2, OUTPUT);
-  pinMode(enable1Pin, OUTPUT);
+  pinMode(motor_control, OUTPUT); 
 
-  // configure LED PWM functionalitites
-  ledcSetup(pwmChannel, freq, resolution);
-  
-  // attach the channel to the GPIO to be controlled
-  ledcAttachPin(enable1Pin, pwmChannel);
+
   //---------------------------------------------------------------------------------------------------------
   
 
@@ -126,18 +120,12 @@ void setup() {
     //-------------------------------------------------------------------------------------------------------
 
     // Muenzpruefer--------------------------------------------------------------------------------------------
-    attachInterrupt(digitalPinToInterrupt(Muenzpruefer_Pin), coinINPUT, RISING); // fot interrupt_Mode
+    //attachInterrupt(digitalPinToInterrupt(Muenzpruefer_Pin), coinINPUT, RISING); // fot interrupt_Mode
     
 
    
 }
 
-void stop_motor(){
-  Serial.println("Motor stopped");
-  digitalWrite(motor1Pin1, LOW);
-  digitalWrite(motor1Pin2, LOW);
-  delay(1000);
-}
 
 
 
@@ -147,40 +135,37 @@ void Task1code( void * pvParameters ){
   Serial.println(xPortGetCoreID());
 
   for(;;){
-    strat_stop();
-    if (turn_start && credit_conut50 > 0 ){
-      credit_conut50--;
-      // Move DC motor forward with increasing speed
-      digitalWrite(motor1Pin1, HIGH);
-      digitalWrite(motor1Pin2, LOW);
-      Serial.println(turn_start);
-      Serial.println(turn_stop);
-      while (dutyCycle <= 255 && turn_start == true && turn_stop == false){
-        ledcWrite(pwmChannel, dutyCycle);   
-        Serial.print("Forward with duty cycle: ");
-        Serial.println(dutyCycle);
-        if(dutyCycle < 255){
-          dutyCycle = dutyCycle + 5;
-        }else{
-          strat_stop();
-        }
-        delay(50);
-    }
-    delay(1000);
-    while(dutyCycle > 0 && turn_start == false && turn_stop == true){
-       ledcWrite(pwmChannel, dutyCycle);
-       Serial.print("Forward with duty cycle: ");
-       Serial.println(dutyCycle);
-       dutyCycle-=5;
-       delay(75);
-    }
-     Serial.println("Motor stopped");
-     digitalWrite(motor1Pin1, LOW);
-     digitalWrite(motor1Pin2, LOW);
-    dutyCycle = 0;
-    delay(100);
-    }
-    delay(100);
+
+    delay(1000); 
+
+//      strat_stop();
+//      // check credit and if the Play wanna start
+//      if (turn_start && credit_conut50 > 0 ){
+//         // pay for the round
+//        credit_conut50--;
+//        
+//
+//        while(turn_start){
+//          strat_stop();
+//          // Motor Transistor
+//          digitalWrite(motor_control, HIGH);
+//          delay(10); 
+//        }
+//        digitalWrite(motor_control, LOW); 
+//        
+//        
+//      }
+  
+
+
+
+
+
+
+
+
+    
+
   } 
 }
 
@@ -188,19 +173,22 @@ void Task1code( void * pvParameters ){
 void Task2code(void * coin_count ){
   Serial.print("Task2 running on core ");
   Serial.println(xPortGetCoreID());
-  int credit_state = 0;
-  for(;;){
-    if(credit_state != *((int*)coin_count)){
-      display.clear();
-      delay(10);
-      display.drawString(80, 32, String(getfloatCredit(), 2));
-      display.display(); 
-      credit_state = *((int*)coin_count); 
-    }
-   //Serial.println(*((int*)coin_count));
-    delay(10);
-
-  }
+  
+  Serial.println(*((int*)coin_count));
+  
+//  int credit_state = 0;
+//  for(;;){
+//    if(credit_state != *((int*)coin_count)){
+//      display.clear();
+//      delay(10);
+//      display.drawString(80, 32, String(getfloatCredit(), 2));
+//      display.display(); 
+//      credit_state = *((int*)coin_count); 
+//    }
+//   //Serial.println(*((int*)coin_count));
+//    delay(10);
+//
+//  }
 }
 
 // DO NOT USE!!!!!
