@@ -88,6 +88,14 @@ void scrollText(int row,
   }
 }
 
+bool isWinning(){
+  // @TODO in the future this function will check if the Player have won
+  // it will compare the the value off the winning possition and the 
+  // current value of the possition. This all will be done with an Endcoder
+  
+  return false; 
+}
+
 
 void setup() {
   Serial.begin(115200);
@@ -97,18 +105,12 @@ void setup() {
   // sets the pins as outputs:
   pinMode(motor_control, OUTPUT);
 
-
-
   // Muenzpruefer--------------------------------------------------------------------------------------------
   attachInterrupt(digitalPinToInterrupt(Muenzpruefer_Pin), coinINPUT, RISING); // fot interrupt_Mode
 
   // Button-----------------------------------------------------------------------
   attachInterrupt(digitalPinToInterrupt(button), switch_on_off, RISING);
-
-  // Button-------------------------------------------------------------------------------------------------
-  // pinMode(button, INPUT);
-  // I'm not sure if this is needed in then Future
-
+  
   
   
   //Display-------------------------------------------------------------------------------------------------
@@ -171,9 +173,7 @@ void Task1code( void * pvParameters ) {
         delay(100); 
       }
       start_stop();
-
       digitalWrite(motor_control, LOW);
-
     }
     digitalWrite(motor_control, LOW);
 
@@ -195,8 +195,6 @@ void Task2code( void * coin_count ) {
   String messageToScroll = 
   "Gewinne in dem du es schafft im richten Moment zu stoppen und oben beide Taler aufeinanderliegen!";
   
-  // debug -> muss dann wieder raus
-  // credit_conut50 = 10 ; 
   for (;;) {
     
     the_money = *((int*)coin_count);     
@@ -224,16 +222,19 @@ void Task2code( void * coin_count ) {
       // set cursor to first column, first row
       lcd.setCursor(0, 0);
       lcd.print("TOMATO  50Cent");
-      // will display the introduction
+     
+      // pure horror!!
+      // this will give the slide function the possibility to interrupt 
+      // when a Player pay the price to play and will show the new 
+      // Display in the Gamingmode
       int* point_change = &(*((int*)coin_count)); 
       
+      // will display the introduction in slide mode 
       scrollText(1, messageToScroll, 250, lcdColumns, point_change );
-      delay(500); 
       
-
+     
+      delay(100); 
     }
-    //Serial.println(credit_conut50);
-    //Serial.println(*((int*)coin_count));
     delay(10);
     
   }
