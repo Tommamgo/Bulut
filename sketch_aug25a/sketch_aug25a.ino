@@ -1,14 +1,26 @@
-#include "SSD1306.h"
 #include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 
 
 // start the duo Core Task (Class)
+
 TaskHandle_t Task1;
 TaskHandle_t Task2;
 
-
 // Display
-SSD1306  display(0x3c, 21, 22);
+// set the LCD number of columns and rows
+int lcdColumns = 16;
+int lcdRows = 2;
+
+// set LCD address, number of columns and rows
+// if you don't know your display address, run an I2C scanner sketch
+LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
+
+
+
+
+
+
 
 // Muenzpruefung
 #define Muenzpruefer_Pin 27
@@ -50,9 +62,29 @@ bool start_stop() {
   if (on_off) {
     return false;
   }
-  return true; 
+  return true;
 
 }
+
+
+// Function to scroll text
+// The function acepts the following arguments:
+// row: row number where the text will be displayed
+// message: message to scroll
+// delayTime: delay between each character shifting
+// lcdColumns: number of columns of your LCD
+void scrollText(int row, String message, int delayTime, int lcdColumns) {
+  for (int i=0; i < lcdColumns; i++) {
+    message = " " + message;  
+  } 
+  message = message + " "; 
+  for (int pos = 0; pos < message.length(); pos++) {
+    lcd.setCursor(0, row);
+    lcd.print(message.substring(pos, pos + lcdColumns));
+    delay(delayTime);
+  }
+}
+
 
 
 
@@ -80,11 +112,10 @@ void setup() {
   // pinMode(button, INPUT);
 
   //Display-------------------------------------------------------------------------------------------------
-  display.init();
-  display.setFont(ArialMT_Plain_24);
-  display.drawString(80, 32, "0.00");
-  display.display();
-  delay(100);
+  // initialize LCD
+  lcd.init();
+  // turn on LCD backlight
+  lcd.backlight();
 
 
 
@@ -117,18 +148,18 @@ void Task1code( void * pvParameters ) {
   Serial.println(xPortGetCoreID());
 
   for (;;) {
-    Serial.println(on_off); 
+    Serial.println(on_off);
     // check credit and if the Play wanna start
     if (on_off && credit_conut50 > 0 ) {
-      Serial.println("Hallo"); 
-      Serial.println(on_off); 
+      Serial.println("Hallo");
+      Serial.println(on_off);
       // pay for the round
       credit_conut50--;
       digitalWrite(motor_control, HIGH);
       delay(1000);
       on_off = start_stop();
       while (!on_off) {
-        
+
       }
       start_stop();
 
@@ -147,23 +178,43 @@ void Task2code( void * pvParameters ) {
   Serial.print("Task2 running on core ");
   Serial.println(xPortGetCoreID());
 
+  // Proof if the Variable if there is some credit
   Serial.println(credit_conut50);
 
   int credit_state = 0;
+  String dd_0 = "Einsatz: "; 
+
+  String messageToScroll = 
+  "Gewinne in dem du es schafft im richten Moment zu stoppen und oben beide Taler aufeinanderliegen!";
+  
+   
+  credit_conut50 = 10 ; 
   for (;;) {
-    if (credit_state != credit_conut50) {
-      display.clear();
-      delay(10);
-      display.drawString(80, 32, String(getfloatCredit(), 2));
-      display.display();
+    // Will show the Credit when someone is playing
+    String dd_0 = "Konto: " + String(getfloatCredit(), 2) + "E"; 
+  
+    if (getfloatCredit() > 0) {
+      // show the amound off Monry when cash is in 
+      lcd.setCursor(0, 0);
+      lcd.print(dd_0); 
+      
+      // weiß gerade nicht was ich damit wollt könnte aber was mit Pinter zu tun haben
       credit_state = credit_conut50;
+
+    }else{
+      // Will display when no Money
+      // set cursor to first column, first row
+      lcd.setCursor(0, 0);
+      lcd.print("TOMATO  50Cent");
+      // will display the introduction
+      scrollText(1, messageToScroll, 250, lcdColumns);
+      delay(500); 
+
     }
     //Serial.println(credit_conut50);
     //Serial.println(*((int*)coin_count));
     delay(10);
-
   }
-
 
 }
 
