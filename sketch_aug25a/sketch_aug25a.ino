@@ -1,9 +1,14 @@
+// Import required libraries
+#include <WiFi.h>
+#include "ESPAsyncWebServer.h"
+#include "SPIFFS.h"
+#include "NTPClient.h"
+#include <ArduinoJson.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
 
 // start the duo Core Task (Class)
-
 TaskHandle_t Task1;
 TaskHandle_t Task2;
 
@@ -15,8 +20,6 @@ int lcdRows = 2;
 // set LCD address, number of columns and rows
 // if you don't know your display address, run an I2C scanner sketch
 LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
-
-
 
 // Muenzpruefung
 #define Muenzpruefer_Pin 27
@@ -31,6 +34,61 @@ volatile int credit_conut50 = 0;
 boolean turn_start = false; // not sure if they are needed in future
 boolean turn_stop = true;   // ""
 boolean on_off = false;
+
+// Julian-Code
+const int ledPin = 2;
+// Stores LED state
+String ledState;
+// Julian Code
+
+
+// Replaces placeholder with LED state value
+String processor(const String& var){
+  Serial.println(var);
+  if(var == "STATE"){
+    if(digitalRead(2)){
+      ledState = "ON";
+    }
+    else{
+      ledState = "OFF";
+    }
+    Serial.print(ledState);
+    return ledState;
+  }
+  return String();
+}
+
+void add2json(const String& line){
+  File file = SPIFFS.open("/export.json", FILE_WRITE);
+  if(file.print(line)){
+    Serial.println("File was written");
+  }else {
+    Serial.println("File write failed");
+  }
+  file.close();
+}
+
+char highfive(){
+  return '5';
+}
+
+
+String helloWorld(){
+  String res = "Hello World";
+  return res;
+}
+
+void passIt(const String& txt){
+  Serial.println(txt);
+}
+
+
+
+
+
+
+
+
 
 
 //#######################################################################
@@ -142,6 +200,19 @@ void setup() {
     NULL,                           /* Task handle to keep track of created task */
     1);                             /* pin task to core 1 */
   delay(500);
+
+
+
+
+  // Julian-Code????????????????????????????????????????????????????????????????
+  pinMode(2, OUTPUT);
+
+    // Initialize SPIFFS
+  if(!SPIFFS.begin(true)){
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
+  }
+  // Julian Ende
 }
 
 //Task1code: blinks an LED every 1000 ms
@@ -184,17 +255,106 @@ void Task1code( void * pvParameters ) {
 
 //Task2code: blinks an LED every 700 ms
 void Task2code( void * coin_count ) {
+  // Linus-Code+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   Serial.print("Task2 running on core ");
   Serial.println(xPortGetCoreID());
-
   // Proof if the Variable if there is some credit
   Serial.println(credit_conut50);
-
   float the_money = 0.0; 
   String dd_0 = "Einsatz: "; 
   String messageToScroll = 
   "Gewinne in dem du es schafft im richten Moment zu stoppen und oben beide Taler aufeinanderliegen!";
+  // Ende-Linus-----------------------------------------------------------------
+
+  // Julian Code*************************************************************
+  // Replace with your network credentials
+  const char* ssid = "Schiele";
+  const char* password = "1234567898";
   
+  // Define an NTP Client to request data and time from an NTP server
+  WiFiUDP ntpUDP;
+  NTPClient timeClient(ntpUDP);
+  
+  // Create AsyncWebServer object on port 80
+  AsyncWebServer server(80);
+  
+  // Create a preallocated memory pool to store a Json Object tree
+  StaticJsonBuffer<200> jsonBuffer;
+  // Set LED GPIO
+  const int ledPin = 2;
+  // Stores LED state
+  String ledState;
+
+
+
+
+      // Connect to Wi-Fi
+      WiFi.begin(ssid, password);
+      while (WiFi.status() != WL_CONNECTED) {
+        delay(1000);
+        Serial.println("Connecting to WiFi..");
+      }
+    
+      // Print ESP32 Local IP Address
+      Serial.println(WiFi.localIP());
+    
+      // Initialize a NTPClient to get time
+      timeClient.begin();
+      // Set offset time in seconds to adjust for your timezone
+      // GMT +1 = 3600
+      // GMT +2 = 7200
+      // ...
+      timeClient.setTimeOffset(7200);
+    
+      // Route for root / web page
+      server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(SPIFFS, "/index.html", String(), false, processor);
+      });
+    
+      // Route to load style.css file
+      server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send(SPIFFS, "/style.css", "text/css");
+      });
+    
+      // Route to set GPIO to HIGH
+      server.on("/on", HTTP_GET, [](AsyncWebServerRequest *request){
+        digitalWrite(ledPin, HIGH);    
+        request->send(SPIFFS, "/index.html", String(), false, processor);
+      });
+      
+      // Route to set GPIO to LOW
+      server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request){
+        digitalWrite(ledPin, LOW);    
+        request->send(SPIFFS, "/index.html", String(), false, processor);
+      });
+    //  
+    //    // Route for json export
+    //  server.on("/export.json", HTTP_GET, [](AsyncWebServerRequest *request){
+    //    request->send(SPIFFS, getJson(), "text/json");
+    //  });
+    
+        // Route for highfive 
+      server.on("/highfive", HTTP_GET, [](AsyncWebServerRequest *request){
+        digitalWrite(2, HIGH);    
+        request->send(SPIFFS, "index.html", String(), false, processor);
+      });
+      
+      // Start server
+      server.begin();
+      
+  // Julian Funktionen'''''''''''''''''''''''''''''''''''''''''''''''''''''''
+  
+  // Set LED GPIO
+  //int ledPin = 2;
+  // Stores LED state
+  //String ledState;
+  
+  // initialize String variables to save the date and time
+  String formattedDate;
+  String dayStamp;
+  String timeStamp;
+  
+ 
   for (;;) {
     
     the_money = *((int*)coin_count);     
@@ -236,6 +396,31 @@ void Task2code( void * coin_count ) {
       delay(100); 
     }
     delay(10);
+
+    // Julian-CodePPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+        while(!timeClient.update()) {
+        timeClient.forceUpdate();
+        }
+    
+      int formattedHours= timeClient.getHours();
+      Serial.println(formattedHours);
+    
+      StaticJsonBuffer<300> JSONbuffer;
+      JsonObject& JSONencoder = JSONbuffer.createObject();
+    
+      JSONencoder["Hour"] = formattedHours;
+      JsonArray& values = JSONencoder.createNestedArray("values");
+      values.add(20);
+      values.add(21);
+      values.add(23);
+    
+      char JSONmessageBuffer[300];
+      JSONencoder.prettyPrintTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+      add2json(JSONmessageBuffer);
+      // Serial.println(JSONmessageBuffer);
+      // Serial.println();
+
+    // Julian-CodePPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
     
   }
 
