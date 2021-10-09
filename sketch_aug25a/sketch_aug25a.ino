@@ -18,13 +18,9 @@ LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
 
 
 
-
-
-
-
 // Muenzpruefung
 #define Muenzpruefer_Pin 27
-// The Cerdit
+// The Cerdit (the Compile need the volatile because of the Interrupt)
 volatile int credit_conut50 = 0;
 
 // Motor
@@ -32,12 +28,12 @@ volatile int credit_conut50 = 0;
 
 // Button
 #define button 4
-boolean turn_start = false;
-boolean turn_stop = true;
+boolean turn_start = false; // not sure if they are needed in future
+boolean turn_stop = true;   // ""
 boolean on_off = false;
 
 
-
+//#######################################################################
 
 
 // Interrupt function to detect a new Coin
@@ -73,23 +69,24 @@ bool start_stop() {
 // message: message to scroll
 // delayTime: delay between each character shifting
 // lcdColumns: number of columns of your LCD
-void scrollText(int row, String message, int delayTime, int lcdColumns) {
+void scrollText(int row, 
+                String message, 
+                int delayTime, 
+                int lcdColumns, int *playing) {
   for (int i=0; i < lcdColumns; i++) {
     message = " " + message;  
   } 
   message = message + " "; 
   for (int pos = 0; pos < message.length(); pos++) {
+    if(*playing > 0){
+      lcd.clear(); 
+      break; 
+    }
     lcd.setCursor(0, row);
     lcd.print(message.substring(pos, pos + lcdColumns));
     delay(delayTime);
   }
 }
-
-
-
-
-
-
 
 
 void setup() {
@@ -110,7 +107,10 @@ void setup() {
 
   // Button-------------------------------------------------------------------------------------------------
   // pinMode(button, INPUT);
+  // I'm not sure if this is needed in then Future
 
+  
+  
   //Display-------------------------------------------------------------------------------------------------
   // initialize LCD
   lcd.init();
@@ -118,7 +118,7 @@ void setup() {
   lcd.backlight();
 
 
-
+  // Pleace do not touch!!!
   //create a task that will be executed in the Task1code() function, with priority 1 and executed on core 0
   xTaskCreatePinnedToCore(
     Task1code,   /* Task function. */
@@ -132,34 +132,43 @@ void setup() {
 
   //create a task that will be executed in the Task2code() function, with priority 1 and executed on core 1
   xTaskCreatePinnedToCore(
-    Task2code,   /* Task function. */
-    "Task2",     /* name of task. */
-    10000,       /* Stack size of task */
-    NULL,        /* parameter of the task */
-    1,           /* priority of the task */
-    &Task2,      /* Task handle to keep track of created task */
-    1);          /* pin task to core 1 */
+    Task2code,                      /* Task function. */
+    "Task2",                        /* name of task. */
+    10000,                          /* Stack size of task */
+    (void*)&credit_conut50,         /* parameter of the task */
+    1,                              /* priority of the task */
+    NULL,                           /* Task handle to keep track of created task */
+    1);                             /* pin task to core 1 */
   delay(500);
 }
 
 //Task1code: blinks an LED every 1000 ms
 void Task1code( void * pvParameters ) {
+  
+  // Will show the Task informations in Serial
   Serial.print("Task1 running on core ");
   Serial.println(xPortGetCoreID());
 
   for (;;) {
     Serial.println(on_off);
+    
     // check credit and if the Play wanna start
-    if (on_off && credit_conut50 > 0 ) {
+    //if (on_off && credit_conut50 > 0 ) {
+    // Das muss wieder raus #######Wichtig!!!!
+    if (on_off) {
+      credit_conut50++;
+      // bis hier 
       Serial.println("Hallo");
       Serial.println(on_off);
+      
       // pay for the round
-      credit_conut50--;
+      // credit_conut50--; ######## WICHTIG MUSS WIEDER REIN!!!!!
       digitalWrite(motor_control, HIGH);
       delay(1000);
       on_off = start_stop();
       while (!on_off) {
-
+        Serial.println("Ich warte gerade auf ein neues Kommando!"); 
+        delay(100); 
       }
       start_stop();
 
@@ -174,46 +183,59 @@ void Task1code( void * pvParameters ) {
 }
 
 //Task2code: blinks an LED every 700 ms
-void Task2code( void * pvParameters ) {
+void Task2code( void * coin_count ) {
   Serial.print("Task2 running on core ");
   Serial.println(xPortGetCoreID());
 
   // Proof if the Variable if there is some credit
   Serial.println(credit_conut50);
 
-  int credit_state = 0;
+  float the_money = 0.0; 
   String dd_0 = "Einsatz: "; 
-
   String messageToScroll = 
   "Gewinne in dem du es schafft im richten Moment zu stoppen und oben beide Taler aufeinanderliegen!";
   
-   
-  credit_conut50 = 10 ; 
+  // debug -> muss dann wieder raus
+  // credit_conut50 = 10 ; 
   for (;;) {
+    
+    the_money = *((int*)coin_count);     
     // Will show the Credit when someone is playing
-    String dd_0 = "Konto: " + String(getfloatCredit(), 2) + "E"; 
-  
-    if (getfloatCredit() > 0) {
+    String dd_0 = "Konto: " + String(the_money, 2) + "E"; 
+    Serial.println(*((int*)coin_count)); 
+ 
+    // will show the amound of money when someone plays
+    if (*((int*)coin_count) > 0) {
+      // multiplies the count of conis with the Value
+      the_money = *((int*)coin_count) * 0.5;
+      // build the String
+      dd_0 = "Konto: " + String(the_money, 2) + "E";
+      
       // show the amound off Monry when cash is in 
       lcd.setCursor(0, 0);
+      // display it 
       lcd.print(dd_0); 
-      
-      // weiß gerade nicht was ich damit wollt könnte aber was mit Pinter zu tun haben
-      credit_state = credit_conut50;
+
+      delay(100); 
 
     }else{
+      
       // Will display when no Money
       // set cursor to first column, first row
       lcd.setCursor(0, 0);
       lcd.print("TOMATO  50Cent");
       // will display the introduction
-      scrollText(1, messageToScroll, 250, lcdColumns);
+      int* point_change = &(*((int*)coin_count)); 
+      
+      scrollText(1, messageToScroll, 250, lcdColumns, point_change );
       delay(500); 
+      
 
     }
     //Serial.println(credit_conut50);
     //Serial.println(*((int*)coin_count));
     delay(10);
+    
   }
 
 }
