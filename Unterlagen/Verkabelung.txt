@@ -2,7 +2,7 @@ GPIO 27 -> DataPin Münzprüfer
 Ground	-> 12V Ground !!!!! Wichtig sonst erkennt der 
 GPIO 22 -> SCL Display
 GPIO 21 -> SDA Display 
-GPOI 14 -> L298N FNA
-GPOI 33 -> L298N IN2
-GPOI 26 -> L298N IN1
 GPOI 16 -> Button to 3.3v
+GPOI 26 -> Motorschater
+GPOI 4  -> button 
+
