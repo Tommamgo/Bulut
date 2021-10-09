@@ -1,0 +1,7 @@
+{
+"game":[
+  {"mode":"is_real", "win_it":"no"},
+  {"mode":"is_demo", "win_it":"no"},
+  {"mode":"is_demo", "win_it":"yes"}
+]
+}
