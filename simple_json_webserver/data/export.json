@@ -1,7 +1,20 @@
 {
-"game":[
-  {"mode":"is_real", "win_it":"no"},
-  {"mode":"is_demo", "win_it":"no"},
-  {"mode":"is_demo", "win_it":"yes"}
-]
+   "game":[
+      {
+
+         "mode":"is_real",
+         "win_it":"no",
+         "date":"2021-10-10_00-26"
+      },
+      {
+         "mode":"is_demo",
+         "win_it":"no",
+         "date":"2021-10-10_00-00"
+      },
+      {
+         "mode":"is_demo",
+         "win_it":"yes",
+         "date":"2021-10-09_23-23"
+      }
+   ]
 }
