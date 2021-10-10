@@ -1,0 +1,138 @@
+#ifdef ESP32
+#include <WiFi.h>
+#else
+#include <ESP8266WiFi.h>
+#endif
+
+
+#include "SPIFFS.h"
+File w_file = SPIFFS.open("/data/wpa_supplicant", FILE_WRITE);
+
+void cpSSID(String ssid){
+  Serial.println(ssid);
+}
+
+void cpPSK(String pw){
+  Serial.println(pw);
+}
+
+void setup() {
+
+  Serial.begin(115200);
+  delay(500);
+
+#ifdef ESP32
+//  WiFi.begin(); // use SSID and password stored by SDK. commented out to test the Configuration AP
+#else
+//  WiFi.disconnect(); // forget the persistent connection to test the Configuration AP
+#endif
+
+  // waiting for connection to remembered  Wifi network
+  Serial.println("Waiting for connection to WiFi");
+  WiFi.waitForConnectResult();
+
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println();
+    Serial.println("Could not connect to WiFi. Starting configuration AP...");
+    configAP();
+  } else {
+    Serial.println("WiFi connected");
+  }
+}
+
+void loop() {
+}
+
+void configAP() {
+
+  WiFiServer configWebServer(80);
+
+  WiFi.mode(WIFI_AP_STA); // starts the default AP (factory default or setup as persistent)
+
+  Serial.print("Connect your computer to the WiFi network ");
+#ifdef ESP32
+  Serial.print("to SSID of you ESP32"); // no getter for SoftAP SSID
+#else
+  Serial.print(WiFi.softAPSSID());
+#endif
+  Serial.println();
+  IPAddress ip = WiFi.softAPIP();
+  Serial.print("and enter http://");
+  Serial.print(ip);
+  Serial.println(" in a Web browser");
+
+  configWebServer.begin();
+
+  while (true) {
+
+    WiFiClient client = configWebServer.available();
+    if (client) {
+      char line[64];
+      int l = client.readBytesUntil('\n', line, sizeof(line));
+      line[l] = 0;
+      client.find((char*) "\r\n\r\n");
+      if (strncmp_P(line, PSTR("POST"), strlen("POST")) == 0) {
+        l = client.readBytes(line, sizeof(line));
+        line[l] = 0;
+
+        // parse the parameters sent by the html form
+        const char* delims = "=&";
+        strtok(line, delims);
+        const char* ssid = strtok(NULL, delims);
+        strtok(NULL, delims);
+        const char* pass = strtok(NULL, delims);
+
+        // send a response before attemting to connect to the WiFi network
+        // because it will reset the SoftAP and disconnect the client station
+        client.println(F("HTTP/1.1 200 OK"));
+        client.println(F("Connection: close"));
+        client.println(F("Refresh: 10")); // send a request after 10 seconds
+        client.println();
+        client.println(F("<html><body><h3>Configuration AP</h3><br>connecting...</body></html>"));
+        client.stop();
+
+        Serial.println();
+        Serial.print("Attempting to connect to WPA SSID: ");
+        Serial.println(ssid);
+        Serial.println(pass);
+        delay(5000);
+
+        
+        WiFi.persistent(true);
+        WiFi.setAutoConnect(true);
+        WiFi.begin(ssid, pass);
+        WiFi.waitForConnectResult();
+
+        // configuration continues with the next request
+
+      } else {
+
+        client.println(F("HTTP/1.1 200 OK"));
+        client.println(F("Connection: close"));
+        client.println();
+        client.println(F("<html><body><h3>Configuration AP</h3><br>"));
+
+        int status = WiFi.status();
+        if (status == WL_CONNECTED) {
+          client.println(WiFi.SSID());
+          client.println(WiFi.psk());
+          client.println(F("Connection successful. Ending AP."));
+        } else {
+          client.println(F("<form action='/' method='POST'>WiFi connection failed. Enter valid parameters, please.<br><br>"));
+          client.println(F("SSID:<br><input type='text' name='i'><br>"));
+          client.println(F("Password:<br><input type='password' name='p'><br><br>"));
+          client.println(F("<input type='submit' value='Submit'></form>"));
+        }
+        client.println(F("</body></html>"));
+        client.stop();
+
+        if (status == WL_CONNECTED) {
+          delay(1000); // to let the SDK finish the communication
+          Serial.println("Connection successful. Ending AP.");
+          configWebServer.stop();
+          WiFi.mode(WIFI_STA);
+        }
+      }
+    }
+  }
+}

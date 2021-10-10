@@ -9,7 +9,7 @@
 const char* ssid = "Schiele";
 const char* password = "1234567898";
 
-// Set LED GPIO
+// Set motor pin
 const int ledPin = 2;
 // Stores LED state
 String ledState;
@@ -34,14 +34,6 @@ const size_t array_capacity = JSON_ARRAY_SIZE(64) + JSON_OBJECT_SIZE(4) + 16*JSO
 // StaticJsonBuffer<200> jsonBuffer;
 // DynamicJsonDocument array_doc(array_capacity);
 StaticJsonDocument<array_capacity> array_doc;
-
-//= "{
-//'game':[
-//  {'mode':'is_real', 'win_it':'no'},
-//  {'mode':'is_demo', 'win_it':'no'},
-//  {'mode':'is_demo', 'win_it':'yes'}
-//]
-//}";
 
 
 // Replaces placeholder with LED state value
@@ -249,18 +241,18 @@ void loop() {
   Serial.println(formattedHours);
 
 
-  StaticJsonBuffer<300> JSONbuffer;
-  JsonObject& JSONencoder = JSONbuffer.createObject();
-
-  JSONencoder["Hour"] = formattedHours;
-  JsonArray& values = JSONencoder.createNestedArray("values");
-  values.add(20);
-  values.add(21);
-  values.add(23);
-
-  char JSONmessageBuffer[300];
-  JSONencoder.prettyPrintTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
-  add2json(JSONmessageBuffer);
+//  StaticJsonBuffer<300> JSONbuffer;
+//  JsonObject& JSONencoder = JSONbuffer.createObject();
+//
+//  JSONencoder["Hour"] = formattedHours;
+//  JsonArray& values = JSONencoder.createNestedArray("values");
+//  values.add(20);
+//  values.add(21);
+//  values.add(23);
+//
+//  char JSONmessageBuffer[300];
+//  JSONencoder.prettyPrintTo(JSONmessageBuffer, sizeof(JSONmessageBuffer));
+//  add2json(JSONmessageBuffer);
 
   
   // Serial.println(JSONmessageBuffer);

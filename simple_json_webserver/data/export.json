@@ -1,20 +1,25 @@
 {
    "game":[
       {
-
+         "date":"2021-10-10_00-26",
          "mode":"is_real",
          "win_it":"no",
-         "date":"2021-10-10_00-26"
+         "costs":"50 Cent"
+
       },
       {
+         "date":"2021-10-10_00-00",
          "mode":"is_demo",
          "win_it":"no",
-         "date":"2021-10-10_00-00"
+         "costs":"50 Cent"
+
       },
       {
+         "date":"2021-10-09_23-23",
          "mode":"is_demo",
          "win_it":"yes",
-         "date":"2021-10-09_23-23"
+         "costs":"50 Cent"
+
       }
    ]
 }
