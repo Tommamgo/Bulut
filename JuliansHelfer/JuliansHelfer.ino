@@ -1,40 +1,62 @@
-
-
 #include <ArduinoJson.h>
 #include "SPIFFS.h"
 
+// will creat an new File obj
+File r_file = SPIFFS.open("/data/export.json");
+
+File write_ff = SPIFFS.open("/data/export.json", FILE_APPEND);
+
+File fileToRead = SPIFFS.open("/data/export.json");
 
 
-void read_sp(){
-    File file2 = SPIFFS.open("/data/export.json");
- 
-    if(!file2){
-        Serial.println("Failed to open file for reading");
-        return;
-    }
- 
-    Serial.println("File Content:");
-    Serial.println("Hallo ich möchste sterben"); 
- 
-    while(file2.available()){
- 
-        Serial.write(file2.read());
-    }
- 
-    file2.close();
+
+// this is the Buffer length of the JSON write
+// !! It have to be the length of the hole Date in one entry !!
+// if not you will die
+#define JSONBUFFERLENGTH 200
+
+// this are the Var's that will be the struct in the Json
+const String DATE_NAME  = "date";
+const String MODE_NAME  = "mode";
+const String WIN_NAME   = "win_int";
+const String CONST_NAME = "consts";
+
+
+// this is an Test function
+void read_sp() {
+  // is the file avilabe
+  if (!r_file) {
+    Serial.println("Failed to open file for reading");
+    // it's like a Runtimeexeption
+    return;
+  }
+  Serial.println("File Content:");
+
+  // this will read the File and will print it in Serial
+  while (r_file.available()) {
+    Serial.write(r_file.read());
+  }
+  // After all this stuff it will close the file
+  r_file.close();
 }
 
-void spi_juliantot(){
+// this is not written without reason with upper letter at the beginning
+void spi_juliantot(String Date, String Mode, String Win, String Costs) {
+  // here will the Jason Document will be Createted
+  DynamicJsonDocument  doc(JSONBUFFERLENGTH);
 
-  //StaticJsonDocument<200> doc;
-  DynamicJsonDocument  doc(200);
-  
-  doc["sensor"] = "gps";
-  doc["time"] = 1351824120;
+  doc[DATE_NAME]    = Date;
+  doc[MODE_NAME]    = Mode;
+  doc[WIN_NAME]     = Win;
+  doc[CONST_NAME]   = Costs;
 
-  JsonArray data = doc.createNestedArray("data");
-  data.add(48.756080);
-  data.add(2.302038);
+  /*
+    // this is some interrest stuff
+    // here you can make an Array in the Json
+    JsonArray data = doc.createNestedArray(GAME_NAME);
+    data.add(48.756080);
+    data.add(2.302038);
+  */
 
   // Generate the minified JSON and send it to the Serial port.
   //serializeJson(doc, Serial);
@@ -42,81 +64,73 @@ void spi_juliantot(){
   // {"sensor":"gps","time":1351824120,"data":[48.756080,2.302038]}
 
   // Start a new line
-  Serial.println();
-  serializeJsonPretty(doc, Serial);
+  // Serial.println();
+  // serializeJsonPretty(doc, Serial);
 
-  Serial.println("Hallo ich bin da, wo Bier"); 
-
-    String sachen; 
+  // here the hole Json will be store
+  String json_String;
   serializeJson(doc, sachen);
 
-  //Serial.println(sachen); 
-  delay(1000); 
-  
-  File file3 = SPIFFS.open("/data/export.json", FILE_APPEND);
+  delay(1000);
 
-
-
-  if (file3.print(sachen)) {
+  if (write_ff.print(json_String)) {
     Serial.println("File was written");
   } else {
     Serial.println("File write failed");
   }
- file3.close(); 
 
-  
-  
-  
+  write_ff.close();
+
+
+
+
 }
 
-void write_sp(){
-    //---------- Read file
-    File fileToRead = SPIFFS.open("/data/export.json");
- 
-    if(!fileToRead){
-        Serial.println("Failed to open file for reading");
-        return;
-    }
- 
-    Serial.println("File Content:");
- 
-    while(fileToRead.available()){
- 
-        Serial.write(fileToRead.read());
-    }
- 
-    fileToRead.close();
+// this function will write data in the File (only)
+void write_sp() {
+  
+  // proofe if the File is existing
+  if (!fileToRead) {
+    Serial.println("Failed to open file for reading");
+    return;
+  }
+  Serial.println("File Content:");
+
+  // when there is an file it will reade it
+  while (fileToRead.available()) {
+    Serial.write(fileToRead.read());
+  }
+  
+  // need to close after use
+  fileToRead.close();
 }
 
 void setup() {
   // Initialize Serial port
-  Serial.begin(9600); 
+  Serial.begin(9600);
   while (!Serial) continue;
 
-  if(!SPIFFS.begin(true)){
-      Serial.println("An Error has occurred while mounting SPIFFS");
-      return;
+  // this is needed to comunicate with the fileSystem
+  if (!SPIFFS.begin(true)) {
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
   }
 
-  
+  delay(500); 
+  // just to test the functions
+    spi_juliantot("Hier koennte ihr Datum stehen",
+                "Spielsuechtig",
+                "Loser",
+                "2400k");
+
+  delay(1000); 
+    read_sp();
+                
 
 
-
-  
-  // The above line prints:
-  // {
-  //   "sensor": "gps",
-  //   "time": 1351824120,
-  //   "data": [
-  //     48.756080,
-  //     2.302038
-  //   ]
-  // }
 }
 
 void loop() {
-  read_sp(); 
-  delay(1000); 
-  spi_juliantot(); 
-  delay(1000); 
+
+  delay(100);
 }
