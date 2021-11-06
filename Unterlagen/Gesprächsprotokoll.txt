@@ -1,6 +1,5 @@
 
 
-
 Gesamtkonzept:
 
 Gerät startet und liest den Zustand des Schlüssels
@@ -24,5 +23,3 @@ Offene Tasks:
 	-> Schöffenhofer klauen (hl) !!!
 	-> Aufräumen der Projekte (hl, sj)
 	-> Projektgesamtzusammenführung (hl)
-	
-			
