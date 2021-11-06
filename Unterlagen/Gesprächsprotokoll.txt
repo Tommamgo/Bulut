@@ -1,0 +1,28 @@
+
+
+
+Gesamtkonzept:
+
+Gerät startet und liest den Zustand des Schlüssels
+
+init (WiFi-Manager) -> Festlegen der SSID und des Passwortes
+
+3 Position 
+	-> normal; kostenpflichtiges und protokollpflichtiges (json) Spiel 
+	-> demo; kostenloses und protokollpflichtes (json) Spiel                 | In Json muss vermerkt werden, dass dieses Spiel nichts kostet
+	-> maintanance; Wartungs- und Kalibrirungsmodus; Möglichkeit der Kalibration, Zurücksetzung der WLAN-Einstellungen, Datenexport
+
+
+Offene Tasks:
+	-> Fertigstellung des SLA (sj)
+	-> JSON-Methoden zusammenführung (sj)
+		-> Auslagern in ein Paket (siehe: JuliansHelfer)
+	-> WiFi-Manager ssid und psk über SPIFFS in eine Datei sichern (setter und getter schreiben) (sj)
+		-> Auch hierbei wieder siehe JuliansHelfer
+	-> Websserver ein Link und Function hinterlegen für das Festlegen der Kalibrirungsposition (sj)
+		-> setter u. getter für die Kalibration bilden (hl)
+	-> Schöffenhofer klauen (hl) !!!
+	-> Aufräumen der Projekte (hl, sj)
+	-> Projektgesamtzusammenführung (hl)
+	
+			
