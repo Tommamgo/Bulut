@@ -1,8 +1,19 @@
+#include <WiFi.h>
+#include "time.h"
+
 #include <ArduinoJson.h>
 #include "SPIFFS.h"
 
 #define JSONBUFFERLENGTH 200
 #define SAVEPOINT "/export.json"
+
+const char* ssid     = "Schiele";
+const char* password = "1234567898";
+
+const char* ntpServer = "pool.ntp.org";
+const long  gmtOffset_sec = 0;
+const int   daylightOffset_sec = 3600;
+
 
 // Create new file objects (read/write)
 File r_file = SPIFFS.open("/export.json");
@@ -17,6 +28,41 @@ const String MODE_NAME  = "mode";
 const String WIN_NAME   = "win_int";
 const String CONST_NAME = "consts";
 
+
+String localTime(){
+  struct tm timeinfo;
+  char current_time[19+1]; //19 chars + \n
+
+  char year[4+1];
+  char month[2+1];
+  char day[2+1];
+  char hours[2+1];
+  char minutes[2+1];
+  char seconds[2+1];
+
+  if(!getLocalTime(&timeinfo)){
+    (String("1900-") + random(01,12) + String("-") + random(1,28) + "T" + random(0,24) + ":" + random(0,59) + ":" + random(0,59)).toCharArray(current_time, sizeof(current_time));
+    String("1900").toCharArray(year, sizeof(year));
+    String(random(1,12)).toCharArray(month, sizeof(month));
+    String(random(1,28)).toCharArray(day, sizeof(day));
+    String(random(0,59)).toCharArray(hours, sizeof(hours));
+    String(random(0,59)).toCharArray(minutes, sizeof(minutes));
+    String(random(0,59)).toCharArray(seconds, sizeof(seconds));
+
+    //Serial.println(String("1900-") + random(01,12) + String("-") + random(1,28) + "T" + random(0,24) + ":" + random(0,59) + ":" + random(0,59));
+  }else{
+    strftime(current_time, sizeof(current_time), "%Y-%B-%dT%H:%M:%S", &timeinfo);
+    strftime(year, sizeof(current_time), "%Y", &timeinfo);
+    strftime(month, sizeof(current_time), "%B", &timeinfo);
+    strftime(day, sizeof(current_time), "%d", &timeinfo);
+    strftime(hours, sizeof(current_time), "%H", &timeinfo);
+    strftime(minutes, sizeof(current_time), "%M", &timeinfo);
+    strftime(seconds, sizeof(current_time), "%S", &timeinfo);
+  }
+
+  Serial.println(current_time);
+  return current_time;
+}
 
 bool merge(JsonObject dest, JsonObjectConst src) {
     for (auto kvp : src) {
@@ -160,6 +206,13 @@ String readFile(fs::FS &fs, const char * path) {
   }
   file.close();
 
+  // readed_stuff = readed_stuff + "]}";
+  return readed_stuff;
+}
+
+String readvalidjson(){
+  String readed_stuff = readFile(SPIFFS, SAVEPOINT);
+  readed_stuff = readed_stuff + "]}";
   return readed_stuff;
 }
 
@@ -172,6 +225,8 @@ String create_json(String g_mode, String g_win_it){
 
   doc["game"]["mode"] = g_mode;
   doc["game"]["win_it"] = g_win_it;
+  doc["game"]["costs"] = "50 Cent";
+
   
   String json_1;
   serializeJsonPretty(doc, json_1);
@@ -182,6 +237,7 @@ String create_json(String g_mode, String g_win_it){
 void add_json(String g_mode, String g_win_it){
   DynamicJsonDocument doc1(JSONBUFFERLENGTH); // Buffer
 
+  doc1["time"] = localTime();
   doc1["mode"] = g_mode;
   doc1["win_it"] = g_win_it;
   
@@ -200,13 +256,12 @@ void add_json(String g_mode, String g_win_it){
   
   // {   "game":[ ..
   String json_combine = json_2 + "," + json_1;
-
+  // .. ]}
+  
   // Serial.println("________json-combine_______");
   // Serial.println(json_combine);
   // Serial.println("___________________________");
   
-  serializeJsonPretty(doc1, json_combine);
-
   File file = SPIFFS.open(SAVEPOINT, "w");
   if (!file) {
     Serial.println("- failed to open file for writing");
@@ -232,10 +287,32 @@ void setup() {
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
   }
-  delay(5000); 
+  delay(5000);
+  
+  // Connect to Wi-Fi
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  WiFi.begin(ssid, password);
+  int counter = 5;
+  while (WiFi.status() != WL_CONNECTED) {
+    if (counter--){
+      delay(500);
+      Serial.print(".");
+    }else{
+      break;
+    }
 
-//
-//  
+  }
+  Serial.println("");
+
+  // Init and get the time
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  localTime();
+
+  //disconnect WiFi as it's no longer needed
+  WiFi.disconnect(true);
+  WiFi.mode(WIFI_OFF);
+
 //  Serial.println("_listdir_:");
 //  listDir(SPIFFS, "/", 0);
 //  Serial.println("_writefile_:");
@@ -249,7 +326,9 @@ void setup() {
 
 void loop() {
   Serial.println("Loop!");
-  Serial.println(readFile(SPIFFS, SAVEPOINT));
+  // Serial.println(readFile(SPIFFS, SAVEPOINT));
+  Serial.println(readvalidjson());
+  delay(5);
   add_json(String(random(0,10)), String(random(0,10)));
   delay(20000);
 }
