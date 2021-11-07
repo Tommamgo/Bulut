@@ -202,13 +202,31 @@ void setup() {
   // Route to set GPIO to HIGH
   server.on("/on", HTTP_GET, [](AsyncWebServerRequest * request) {
     digitalWrite(ledPin, HIGH);
-    request->send(SPIFFS, "/index.html", String(), false, processor);
+    request->send(SPIFFS, "/motor_calibrator.html", String(), false, processor);
   });
 
   // Route to set GPIO to LOW
   server.on("/off", HTTP_GET, [](AsyncWebServerRequest * request) {
     digitalWrite(ledPin, LOW);
-    request->send(SPIFFS, "/index.html", String(), false, processor);
+    request->send(SPIFFS, "/motor_calibrator.html", String(), false, processor);
+  });
+
+  // Route for position of motor calibration
+  server.on("/save_position", HTTP_GET, [](AsyncWebServerRequest * request) {
+
+    // TODO: Display on the screen (e.g.) Calibration successful 
+    // ##
+    // ##
+    // ##
+    // ##
+    // ##
+    
+    request->send(SPIFFS, "/save_position.html", String(), false, processor);
+  });
+  
+  // Route for page motor calibration
+  server.on("/motor_calibrator", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(SPIFFS, "/motor_calibrator.html", String(), false, processor);
   });
   
   // Route for json export
