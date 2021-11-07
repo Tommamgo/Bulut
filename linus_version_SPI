@@ -1,5 +1,3 @@
-#include <ArduinoJson.h>
-#include "SPIFFS.h"
 
 // will creat an new File obj
 File r_file = SPIFFS.open("/data/export.json");
@@ -127,10 +125,8 @@ void setup() {
     read_sp();
                 
 
-
 }
 
 void loop() {
-
-  delay(100);
+  delay(1000);
 }

@@ -16,6 +16,16 @@ void cpPSK(String pw){
   Serial.println(pw);
 }
 
+String getSSID(){
+  // return String(WiFi.SSID()));
+  return WiFi.SSID());
+}
+
+String getPSK(){
+    // return String(WiFi.psk()));
+    return WiFi.psk());
+}
+
 void setup() {
 
   Serial.begin(115200);
