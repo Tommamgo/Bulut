@@ -17,18 +17,22 @@ int lcdRows = 2;
 LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
 
 // Muenzpruefung
-#define Muenzpruefer_Pin 27
+#define Muenzpruefer_Pin 16
 // The Cerdit (the Compile need the volatile because of the Interrupt)
 volatile int credit_conut50 = 0;
 
 // Motor
-#define motor_control 26
+#define motor_control 12
 
 // Button
-#define button 4
+#define button 17
 boolean turn_start = false; // not sure if they are needed in future
 boolean turn_stop = true;   // ""
 boolean on_off = false;
+
+//LCD 
+#define sd 22
+#define sc 21 
 
 
 
